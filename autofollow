@@ -1,0 +1,27 @@
+#!/bin/sh
+cd ~/sandbox/
+`twidge lsfollowing >> me.following; cat me.following | sort | uniq > /tmp/me.hop; cp /tmp/me.hop me.following`
+
+`twidge lsfollowers >> following.me; cat following.me | sort | uniq > /tmp/hop.me; cp /tmp/hop.me following.me`
+
+count=0
+
+for u in `cat following.me`; do
+	if [ -z `cat me.following | grep $u` ]; then
+		twidge follow $u; 
+		if [ $? -eq 0 ]; then
+			echo "Could not find $u in me.following -> $u followed successfully"
+			count=$(($count+1))
+		else
+			echo "Impossible to follow $u"
+			echo $u >> me.following
+		fi
+#	else
+#		echo "Not following $u"; 
+	fi
+	 
+done
+
+if [ $count -gt 0 ]; then
+	echo "$count new user followed"
+fi

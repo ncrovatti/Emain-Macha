@@ -1,0 +1,7 @@
+{
+	"type"    : "doodle",
+	"subject" : "%subject%",
+	"image"   : "%image%",
+	"url"     : "%url%",
+	"md5"     : "%md5%"
+}

@@ -1,0 +1,43 @@
+#!/bin/sh
+wget -q -O /tmp/doodlein.xml "http://www.google.com/logos/logos.xml"
+
+lastDoodles=$(xmllint --xpath "/rss/channel/item/*" /tmp/doodlein.xml | sed -e 's@</description>@</description>\n@g' | awk -F"\"" '{print $6"|"$4"|"$2}')
+origTemplate=$(cat ~/sandbox/doodleTemplate.html);
+origJSONTemplate=$(cat ~/sandbox/doodleTemplate.json);
+referenceMD5=~/sandbox/lastDoodle.md5;
+IFS=$"
+"
+
+if [ ! -f "$referenceMD5" ]; then
+	touch $referenceMD5;
+fi
+
+for doodle in `echo "$lastDoodles"`;
+do
+	template="$origTemplate"
+	jsonTemplate="$origJSONTemplate"
+	subject=$(echo "$doodle" | cut -d'|' -f 1)
+	image=$(echo "$doodle" | cut -d'|' -f 2)
+	url=$(echo "$doodle" | cut -d'|' -f 3)
+	md5=$(echo $doodle | md5sum | cut -d' ' -f1 | tr -d '\n')
+	for variable in subject image url md5; 
+	do
+		value=$(eval echo \$$variable | sed -e 's@"@\\\\\\\"@g');
+		template=$(echo "$template" | sed -e "s@%$variable%@$value@g");
+		jsonTemplate=$(echo "$jsonTemplate" | sed -e "s@%$variable%@$value@g");
+	done
+
+	oldMD5=$(cat ~/sandbox/lastDoodle.md5);
+
+	if [ "$oldMD5" != "$md5" ]; then
+		echo "New Doodle found. Promptly alerting myself!";
+
+		echo $md5 > $referenceMD5
+		echo "$template" | mail -s "New Doodle!" -a "Content-Type: text/html" -c `cat ~/.myEmail`
+		echo "$jsonTemplate" > /tmp/template.$md5
+		echo "$jsonTemplate" | curl -X POST http://tuscaran.iriscouch.com/google_doodles/ -d @/tmp/template.$md5 -H "Content-Type: application/json";
+	fi
+	exit 0; # Processing only the first (most recent) element
+	
+done
+
