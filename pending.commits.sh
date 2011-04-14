@@ -53,17 +53,6 @@ for rev in $revisions; do
 	
 	svn log --xml -vr $rev $workDir > $revisionFile
 
-	#<log>
-	#<logentry revision="46415">
-	#<author>vincent.falies</author>
-	#<date>2011-04-14T13:24:49.553776Z</date>
-	#<paths>
-	#<path kind=""  action="M">/trunk/kewego/epix-admin/Doozers/Apps/Ajax/EpixVideosAjaxApp.php</path>
-	#</paths>
-	#<msg>Console : Bug fixed menu in my videos </msg>
-	#</logentry>
-	#</log>
-
 
 	developperName=$(xmllint --xpath "/log/logentry/author" $revisionFile | html2text);
 	comment=$(xmllint --xpath "/log/logentry/msg" $revisionFile | html2text | sed -e 's/"/\\"/g');
