@@ -33,7 +33,7 @@ do
 		echo "New Doodle found. Promptly alerting myself!";
 
 		echo $md5 > $referenceMD5
-		echo "$template" | mail -s "New Doodle!" -a "Content-Type: text/html" -c `cat ~/.myEmail`
+		echo "$template" | mail -s "New Doodle!" -a "Content-Type: text/html" -c nicolas.crovatti@gmail.com nicolas.crovatti@kewego.com 
 		echo "$jsonTemplate" > /tmp/template.$md5
 		echo "$jsonTemplate" | curl -X POST http://tuscaran.iriscouch.com/google_doodles/ -d @/tmp/template.$md5 -H "Content-Type: application/json";
 	fi

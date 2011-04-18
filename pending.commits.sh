@@ -1,15 +1,66 @@
-#!/bin/sh
+#!/bin/bash
 
 export LANG=C
 
-lastShipping=$1
-developperName=$2
-customDir=$3
+usage()
+{
+cat << EOF
+usage: $0 options
 
+This script parse and save svn logs into a couchDB instance.
 
+OPTIONS:
+   -h      Show this message
+   -f      Shipping start date
+   -l      Shipping last date
+   -d      Developer Name
+   -c      Custom dir (kewego, pj ...)
+EOF
+}
+
+if [ -z $1 ]; then 
+	usage;
+	exit;
+fi
+
+#!/bin/bash
+until [ -z "$1" ]; do
+  case $1 in
+    "-c")
+      shift
+      if [ "${1:1:0}" != "-" ]; then
+		customDir=$1; shift
+      fi;;
+    "-d")
+      shift
+      if [ "${1:1:0}" != "-" ]; then
+		developperName=$1;shift
+      fi;;
+    "-l")
+      shift
+      if [ "${1:1:0}" != "-" ]; then
+		lastShipping=$1;shift
+      fi;;
+    "-f")
+      shift
+      if [ "${1:1:0}" != "-" ]; then
+		firstShipping=$1;shift
+      fi;;
+    "-h")
+		usage; exit;;
+	*) shift;;
+
+  esac
+done
 
 if [ -z $customDir ]; then 
 	customDir='kewego';
+fi
+
+if [ -z $firstShipping ]; then
+	firstShipping="HEAD"
+else
+	firstShipping="{$firstShipping}"
 fi
 
 workDir=/home/nico/workspace/pulse3/$customDir/
@@ -19,15 +70,18 @@ total=0
 i=1
 
 date=`date +%Y-%m-%d`
-#revisions=`svn log -r HEAD:{$lastShipping} $workDir | \
-#			grep -i "$developperName" | \
-#			sed -ne 's/.*\([r][0-9]\{3,\}\).*/\1/mgp' | \
-#			tr -s '\n' ' '` 
-revisions=`svn log --xml -r HEAD:{$lastShipping} $workDir |\
+logsData=$(svn log --xml -v -r $firstShipping:{$lastShipping} $workDir | sed -e 's/\*/_/g')
+truncate --size 0 /tmp/logs
+echo $logsData > /tmp/logs
+logsData=$(xmllint -xpath "/log" /tmp/logs | sed -e 's@</logentry>@</logentry>\n@g')
+
+revisions=$(echo "$logsData" |\
 			grep -i "$developperName" | \
-			grep revision= | awk -F"\"" '{print "r"$2}'` 
-#echo "CMD: svn log -r HEAD:{$lastShipping} $workDir | grep -i '$developperName' | sed -e 's/^\([r0-9]*\).*/\1/g' | tr -s '\n' ' '"
+			grep revision= | awk -F"\"" '{print "r"$2}')
 truncate --size 0 $logs
+
+logsData=$(cat /tmp/logs | sed -e 's@<msg>@<msg><![CDATA[@g' |  sed -e 's@</msg>@]]></msg>@g' )
+echo $logsData > /tmp/logs
 
 # Processing
 date
@@ -37,26 +91,16 @@ echo "Gathering, please wait ..."
 for k in $(echo $revisions | tr ' ' '\n'); do total=$((total+1)); done;
 
 for rev in $revisions; do
+	intRev=$(echo $rev | sed -e 's/r//g');
+	revisionData="<log>$(echo "$logsData" | xmllint -xpath "logentry[@revision = '$intRev']" - )</log>";
 	missing="";
 	error="";
 	revisionFile=/tmp/revision.$rev
-#	svn log -r $rev $workDir > $revisionFile
-#	developperName=$(cat $revisionFile | sed -ne '/^[r\d+]/p' | cut -d '|' -f 2 | tr -d ' ')
-#	comment=$(cat $revisionFile | \
-#			sed -e 's/[\-]//gm' | \
-#			tail -n +3 | \
-#			sed -e '/^$/d' | \
-#			sed -e 's/[ ]\{2,\}/ /g' | \
-#			sed -e 'y/:/ /');
-
-	
-	
-	svn log --xml -vr $rev $workDir > $revisionFile
-
-
+	echo $revisionData > $revisionFile
+	#svn log --xml -vr $rev $workDir > $revisionFile
 	developperName=$(xmllint --xpath "/log/logentry/author" $revisionFile | html2text);
-	comment=$(xmllint --xpath "/log/logentry/msg" $revisionFile | html2text | sed -e 's/"/\\"/g');
-	date=$(xmllint --xpath "/log/logentry/date" $revisionFile | html2text)
+	comment=$(xmllint --nocdata --xpath "/log/logentry/msg" $revisionFile | html2text | sed -e 's@\\@\\\\@g' | sed -e 's/"/\\"/g' );
+	date=$(xmllint --xpath "/log/logentry/date" $revisionFile | html2text);
 	paths=$(xmllint --xpath "/log/logentry/paths/*" $revisionFile |\
 		sed -e 's@">@">"@g' |\
 		sed -e 's@</path>@"</path>\n@g' |\
@@ -72,13 +116,15 @@ for rev in $revisions; do
 	   \"date\"    : \"$date\",
 	   \"paths\"   : $paths
 	";
-
+	
 	record=`curl -s http://tuscaran.iriscouch.com/node_commits/$rev`
 	missing=$(echo $record | grep "missing" | grep -v "_rev");
 
     if [ "$missing" != "" ]; then
     	method="POST";
     	document="";
+
+    	# Rajout au wiki
     else 
     	dbRev=$(echo $record | awk -F"\"" '{print $8}')
     	method="PUT";
@@ -88,9 +134,9 @@ for rev in $revisions; do
 
     nodeTemplate="{$nodeTemplate}"
 
+	echo "$nodeTemplate" > /tmp/template.$rev
 	#echo "$method'ing `cat /tmp/template.$rev` to http://tuscaran.iriscouch.com/node_commits/$document "
 
-	echo "$nodeTemplate" > /tmp/template.$rev
 	result=$(echo "$nodeTemplate" | curl -s -X $method http://tuscaran.iriscouch.com/node_commits/$document -d @/tmp/template.$rev -H "Content-Type: application/json");
 	error=$(echo $result | grep "error")
 
@@ -111,7 +157,6 @@ for rev in $revisions; do
 	i=$((i+1)) 
 	echo $line >> $logs
 done;
-echo 
 
 cat $logs | sort > /tmp/sorted.logs
 cp /tmp/sorted.logs $logs
@@ -133,3 +178,4 @@ exit;
 
 #rm -rf /tmp/forShipping
 #rm -rf /tmp/revision.r*
+#rm -rf /tmp/logs
