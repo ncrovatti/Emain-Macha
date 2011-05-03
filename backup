@@ -1,0 +1,33 @@
+#!/bin/sh
+
+cd /home/backups
+
+databases=$(echo "show databases;" | mysql -u root --password=`cat ~/.p`)
+
+for database in $databases 
+do
+	if [ "$database" != "Database" ]; then
+	if [ "$database" != "information_schema" ];
+	then 
+		echo "Dumping $database ..."
+		mysqldump $database --add-drop-table -h localhost -u root --password=`cat ~/.p` | bzip2 -c > /home/backups/db_${database}_`date +"%u"`.bz2
+	fi 
+	fi
+done 
+
+
+sites=`find /home/ -mindepth 1 -maxdepth 1 -type d \! -group root`;
+
+for site in $sites
+do
+	site=`basename ${site}`
+	echo "Backuping ${site}"
+	cd /home/
+	tar -zcf /home/backups/${site}_`date +"%u"`.tar.gz ${site}/ 
+done
+
+
+
+cd /home/backups/
+md5sum * > checksums.md5
+
