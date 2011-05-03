@@ -1,0 +1,221 @@
+#!/bin/sh
+export LANG=C
+
+ERRORFILE=scaffolding.err
+USER=$1
+DATE=`date`
+MYSQL_PARAMS='-hlocalhost -uroot -p`cat ~/.p`'
+MYSQL_PASSWORD=`</dev/urandom tr -dc A-Za-z0-9 | head -c8`
+SHELL_PASSWORD=`</dev/urandom tr -dc A-Za-z0-9 | head -c8`
+
+if [ -z $USER ]; then 
+	echo "Usage: $0 username"
+	exit 1
+fi
+
+
+usercheck=`grep "^$USER:" /etc/passwd`
+
+if [ ! -z "$usercheck" ]; then 
+	echo "WARNING: $USER user already exists (id=`id -u $USER`). ";
+	echo -n "Do you really want to reset this user's SHELL and MYSQL passwords ? [y/N] ";
+	read answer
+	case "$answer" in
+        y)
+		echo "Reseting $USER ..."
+		;;
+        *)
+		echo "Scaffolding aborted."
+        	exit 1
+ 
+	esac
+fi
+
+USER_EMAIL=`finger $USER | grep Office | cut -d':' -f 2 | tr -d " "`
+
+if [ -z $USER_EMAIL ]; then 
+	echo "Usage: $0 username"
+	echo "Make sure you created the user using the adddeveloper command."
+	echo "Alternatively you can run \`chfn -r \"email\" username\` to fix the problem."
+	exit 1
+fi
+
+
+USER_REAL_NAME=`finger $USER | head -n 1 | cut -d ':' -f 3`
+HOME=/home/$USER
+
+echo 'Setting shell password ...'
+echo -e "$SHELL_PASSWORD\n$SHELL_PASSWORD\n" | passwd -q $USER
+
+echo 'Creating personal docroot ...'
+sudo -u $USER mkdir $HOME/public_html 2>>$ERRORFILE
+chgrp www-data $HOME/public_html
+cp /root/user_scaffolding/favicon.ico $HOME/public_html/
+
+echo 'Storing phpInfo ...'
+sudo -u $USER echo '<?php phpinfo();' > $HOME/public_html/infos.php
+
+(
+cat <<EOH
+
+AuthUserFile $HOME/.htpasswd
+AuthGroupFile /dev/null
+AuthName phpInfo
+AuthType Basic
+
+<Files "infos.php">
+	require user $USER
+</Files>
+
+EOH
+) > $HOME/public_html/.htaccess
+
+htpasswd -b -n $USER $SHELL_PASSWORD > $HOME/.htpasswd
+chown $USER.$USER $HOME/.htpasswd
+chown $USER.$USER $HOME/public_html/*
+chown $USER.$USER $HOME/public_html/.htaccess
+
+
+
+echo 'Creating personal database ...'
+mysqladmin $MYSQL_PARAMS create $USER 2>> $ERRORFILE
+echo "CREATE USER '$USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD';" | mysql $MYSQL_PARAMS 2>>$ERRORFILE;
+echo "GRANT ALL ON $USER.* TO '$USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD';" | mysql $MYSQL_PARAMS 2>>$ERRORFILE;
+
+echo "Sending personal information to $USER_REAL_NAME ..."
+
+
+message="
+Hello and welcome to your personal Kewego lab $USER_REAL_NAME!\n\n
+
+Server - Here is some information to help you take the control of this new place: \n\n
+
+\tURL			: http://devlabs.kewego.com/~$USER \n
+\tphpInfos		: http://devlabs.kewego.com/~$USER/infos.php (*)\n
+\tUsername		: $USER \n
+\tShell password	: $SHELL_PASSWORD \n
+\tMysql password	: $MYSQL_PASSWORD \n
+
+\n\n
+
+FTP - You can put files using the FTP protocol on port 2121 using your shell details to log in. \n\n
+
+\tHost     : devlabs.kewego.com\n
+\tPort     : 2121\n
+\tUsername : $USER\n
+\tPassword : $SHELL_PASSWORD\n
+
+\n\n
+
+
+Installed softwares: \n\n
+
+`apache2 -v`
+\n\n
+`php -v`
+\n\n
+`mysqld --version`
+\n\n
+
+--------------------------------------------------------------------------\n
+--- Since passwords have transited uncrypted I urge you to change them ---\n
+--------------------------------------------------------------------------\n
+\n\n
+
+(*) For security reasons this page is protected by your shell user and password.\n\n
+
+(This email from nicolas.crovatti@kewego.com to $USER_EMAIL)\n\n"
+
+
+echo -e $message | mail --append="Reply-to:nicolas.crovatti@kewego.com" -s "Welcome to the Kewego Labs" $USER_EMAIL
+
+ 
+
+(
+cat <<EOF
+
+<!DOCTYPE html>
+<html> 
+<head> 
+ 	<meta charset="utf-8">
+ 	<title>Kewego Labs</title> 
+	<style>
+		body {
+			font: 13px arial, helvetica, "Nimbus Sans L", "Bitstream Vera Sans",sans-serif;
+			font-size: small;
+			font: x-small;
+			line-height: 1.22em;
+			background: url("data:image/gif;base64,R0lGODlhHgAeAMQAALy8vLq6urm5ucLCwru7u8TExL6+vr29vbi4uMPDw8XFxcfHx8bGxr+/v8DAwMHBwcjIyLe3t8nJyba2trW1tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACwAAAAAHgAeAAAF/2BQGAUwEEWxJMKwKEKyMEbQBo5gMIwzHAvIAAEIJAIDgTFZKygOLUVhYHgsqIeDgsBABQxHRoGheDCSgxSBgPAWDwBaoCFYBAJSABFmM0ASBldHAwEEVwsHDHN1AAAFAWIIAkRCVAwNegoGBgAKAA0GCpcHPysNBwEmAAsIAw5SLIafCKSrYgMJJnRKBQ1PAgKoCHYQKbmSXwQACVMGXg4MAgBgD18PCdhfmMOauWkNrY8GkwIMBwkDUgYDDQNdhSVTRKECngXlAgUEqQQKCwLK+A2gQiDXlzG0AMRwUCjAvzqaEDzJAgCCAgSBbkkpxqIRoDTLgP0C4IBAkgDDGv95goEglQI0XxLsYYDOBRwHAKrJ4DHAxIE1ZHpKU1HNBBgFDM29AAAFTz0TDwY+MsrgQaMUKhygWkDAQMoEMJwIcCDJZ6oiC+6xQ0BzYDRdDziB4qHA3wKmC8DhYSFikck0Q1598neOoZ6o+0w4VKEgACpOIb0iyAFFyU9STkTMyAIp2AM6JO39wLNu3WMGjoJgCvWicYoDNboETEDgnJi3CCDwgMJMzoIa+SQAm2RywQMtYGlPKYRaiQwgLA5YjfGyBa0zAFAQyo3KZTAEzA74AthqRxmZpFo4y5fGpNGL6xAUeDAl7pFw69LUgwOhkLICLYnXSSolRPVSQZzQdhZKHZM9EBEhmiCVwkl2oOaYV2TAMUMvP6CzRk+OtFJPf104UYICEDRggyuEjMPHW0UAc88qPXVxwjgMsJWKFg6QJcI0JQjQwAyNhAAAOw=="); 
+			color: rgba(0, 0, 0, 0.6);
+			text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.2);
+		}
+		
+		h1 {
+			font-size: 4em;
+			margin-top: 0px;
+		}
+		
+		h2 {
+			font-size: 2em;
+		}
+		
+		h1, h2 {
+			font-family: "Droid Serif", Cambria, Georgia, Palatino, "Palatino Linotype", "Myriad Pro", Serif;
+			line-height: 1em;
+			font-style:italic;
+			font-weight: bold;
+			color: #3F3F3F;
+		}
+
+		h1 img {
+			vertical-align: middle;
+		}
+		
+		footer {
+			margin-top:2em;
+			font-style:italic;
+		}
+		
+		body > div {
+			-moz-border-radius: 20px;
+			-webkit-border-radius: 20px;
+			border-radius: 20px;
+			margin: 0 auto;
+			padding: 2em;
+			background-color:rgba(0, 0, 0, 0.2);
+			background-color: #999\9;
+			width: 460px;
+			-webkit-box-shadow: #888 4px 4px 10px;
+			-moz-box-shadow: #888 4px 4px 10px;
+			box-shadow: #888 4px 4px 10px;
+			border: 2px solid #555;
+		}	
+	</style>
+</head> 
+<body>
+	<div> 
+		<header> 
+			<h1><img src="http://www.kewego.com/images/logo.png" alt="Kewego"/></h1>
+		</header> 
+		<section> 
+			<h2>Welcome to $USER_REAL_NAME lab!</h2> 
+			<p>
+			Here is a <a href="infos.php">little more information</a>
+			</p>
+		</section> 
+		<section> 
+			<p> 
+				Scaffolded on $DATE
+			</p> 
+		</section> 
+		<footer> 
+			&copy; 2010 Kewego -- DevLabs
+		</footer> 
+	</div> 	
+</body>
+</html>
+
+EOF
+) > $HOME/public_html/index.html
+
+exit 0

@@ -1,0 +1,27 @@
+#!/bin/sh
+
+username=$1
+if [ -z $username ]; then 
+	echo "Usage: $0 username";
+	exit 1;
+fi
+
+usercheck=`grep "^$username:" /etc/passwd`
+if [ ! -z "$usercheck" ]; then 
+	echo "$username user already exists (id=`id -u $username`).";
+	exit 1;
+fi
+
+
+echo -n "Please, enter $username email address: "
+read useremail
+
+adduser $username
+
+chfn -r "$useremail" $username;
+
+echo "Scaffolding $username environement ..."
+./user_scaffold $username
+
+
+echo "All done."
