@@ -11,7 +11,7 @@ echo "" > /tmp/$user.sold
 
 for page in `seq 1 $pages`; 
 do 
-	wget -q -O '-' "http://feedback.ebay.fr/ws/eBayISAPI.dll?ViewFeedback2&ftab=AllFeedback&userid=$user&iid=-1&de=off&items=25&interval=0&mPg=272&page=$page" |\
+	wget -q -O '-' "http://feedback.ebay.fr/ws/eBayISAPI.dll?ViewFeedback2&ftab=AllFeedback&userid=$user&items=200&page=$page" |\
 	grep -o '#[0-9]\{7,\}' >> /tmp/$user.sold; 
 	echo "Fetching $user page #$page/$pages ..."
 done;
