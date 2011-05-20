@@ -3,12 +3,15 @@ package com.emainmacha.androidwebview;
 import android.app.Activity;
 import android.os.Bundle;
 import android.webkit.WebView;
+import android.webkit.WebSettings;
 import android.webkit.WebViewClient;
+import android.webkit.WebChromeClient;
 import android.view.KeyEvent;
+import android.util.Log;
 
 public class AndroidWebView extends Activity
 {
-	WebView mWebView;
+	private static WebView myWebView;
 
     private class AndroidWebViewClient extends WebViewClient {
     	@Override
@@ -25,16 +28,24 @@ public class AndroidWebView extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        mWebView = (WebView) findViewById(R.id.webview);
-        mWebView.setWebViewClient(new AndroidWebViewClient());
-        mWebView.getSettings().setJavaScriptEnabled(true);
-        mWebView.loadUrl("http://developers.kit-digital.com");
+        myWebView = (WebView) findViewById(R.id.webview);
+        myWebView.setWebViewClient(new AndroidWebViewClient());
+		myWebView.setVerticalScrollBarEnabled(false);
+		myWebView.setHorizontalScrollBarEnabled(false);
+		myWebView.setWebChromeClient(new WebChromeClient() {
+			public void onConsoleMessage(String message, int lineNumber, String sourceID) {
+				Log.d("MyApplication", message + " -- From line " + lineNumber + " of " + sourceID);
+			}
+		});
+        myWebView.getSettings().setJavaScriptEnabled(true);
+       	myWebView.loadUrl("http://ncrovatti.cardinet.kewego.int:1234/droid.html");
+//        myWebView.loadUrl("http://linuxfr.org/");
     }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-    	if ((keyCode == KeyEvent.KEYCODE_BACK) && mWebView.canGoBack()) {
-    		mWebView.goBack();
+    	if ((keyCode == KeyEvent.KEYCODE_BACK) && myWebView.canGoBack()) {
+    		myWebView.goBack();
     		return true;
     	}
 
