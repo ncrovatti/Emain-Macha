@@ -53,11 +53,32 @@ public class CaptureMode extends Activity
 
 				image = BitmapFactory.decodeFile(outputFileUri.toString());   
 
-				String decodedData = new String(decoder.decode(new QRCodeImage(image)));  
+				String decodedData = new String(decoder.decode(new J2SEImage(image)));  
 			} 
 			else {
 				Toast.makeText(this, "Image Captured, Data is not null", Toast.LENGTH_SHORT).show();
 			}
 		}
 	}
+
+
+	class J2SEImage implements QRCodeImage {   
+		Bitmap image;   
+	   
+		public J2SEImage(Bitmap image) {   
+			this.image = image;   
+		}   
+	   
+		public int getWidth() {   
+			return image.getWidth();   
+		}   
+		   
+		public int getHeight() {   
+			return image.getHeight();   
+		}   
+	   
+		public int getPixel(int x, int y) {   
+			return image.getPixel(x, y);   
+		}   
+	}   
 }
