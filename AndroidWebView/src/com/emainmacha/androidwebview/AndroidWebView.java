@@ -54,8 +54,7 @@ public class AndroidWebView extends Activity
 		});
         myWebView.getSettings().setJavaScriptEnabled(true);
         myWebView.getSettings().setPluginsEnabled(true);
-       	myWebView.loadUrl("http://ncrovatti.cardinet.kewego.int:1234/droid.html");
-//        myWebView.loadUrl("http://linuxfr.org/");
+        myWebView.loadUrl("file:///android_asset/droid.html");
     }
 
     @Override
