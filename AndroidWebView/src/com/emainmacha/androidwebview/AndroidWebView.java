@@ -11,6 +11,20 @@ import android.util.Log;
 
 public class AndroidWebView extends Activity
 {
+
+	public class JavaScriptInterface {
+ 	   Context mContext;
+
+		/** Instantiate the interface and set the context */
+		JavaScriptInterface(Context c) {
+			mContext = c;
+		}
+
+		/** Show a toast from the web page */
+		public void showToast(String toast) {
+			Toast.makeText(mContext, toast, Toast.LENGTH_SHORT).show();
+		}
+	}
 	private static WebView myWebView;
 
     private class AndroidWebViewClient extends WebViewClient {
@@ -32,12 +46,14 @@ public class AndroidWebView extends Activity
         myWebView.setWebViewClient(new AndroidWebViewClient());
 		myWebView.setVerticalScrollBarEnabled(false);
 		myWebView.setHorizontalScrollBarEnabled(false);
+		myWebView.addJavascriptInterface(new JavaScriptInterface(this), "Android");
 		myWebView.setWebChromeClient(new WebChromeClient() {
 			public void onConsoleMessage(String message, int lineNumber, String sourceID) {
 				Log.d("MyApplication", message + " -- From line " + lineNumber + " of " + sourceID);
 			}
 		});
         myWebView.getSettings().setJavaScriptEnabled(true);
+        myWebView.getSettings().setPluginsEnabled(true);
        	myWebView.loadUrl("http://ncrovatti.cardinet.kewego.int:1234/droid.html");
 //        myWebView.loadUrl("http://linuxfr.org/");
     }
