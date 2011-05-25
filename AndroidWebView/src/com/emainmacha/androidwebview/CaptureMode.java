@@ -8,22 +8,13 @@ import android.os.Environment;
 import android.net.Uri;
 import android.content.Context;
 import android.content.Intent;
-import android.provider.MediaStore;
 import android.widget.Toast;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import jp.sourceforge.qrcode.QRCodeDecoder;   
-import jp.sourceforge.qrcode.data.QRCodeImage;   
-import jp.sourceforge.qrcode.exception.DecodingFailedException;   
-import jp.sourceforge.qrcode.exception.InvalidVersionInfoException;
-
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 
 public class CaptureMode extends Activity
 {
-	public static final int PICTURE_CAPTURED = 1;
-	
-	Uri outputFileUri;
 	
 	/** Called when the activity is first created. */
     @Override
@@ -31,15 +22,10 @@ public class CaptureMode extends Activity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.camera);
-
-		Intent camera = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-		File file     = new File(Environment.getExternalStorageDirectory(), "scanned-qrcode.jpg");
-		outputFileUri = Uri.fromFile(file);
-
-		camera.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri);
-        startActivityForResult(camera, PICTURE_CAPTURED);
+		IntentIntegrator.initiateScan(this); 
     }
 
+<<<<<<< HEAD
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if ((requestCode == PICTURE_CAPTURED) && (resultCode == Activity.RESULT_OK)) {
@@ -56,27 +42,26 @@ public class CaptureMode extends Activity
 			else {
 				Toast.makeText(this, "Image Captured, Data is not null", Toast.LENGTH_SHORT).show();
 			}
+=======
+	@Override 
+	protected void onActivityResult(int requestCode, int resultCode, Intent intent) 
+	{
+		if ((requestCode == IntentIntegrator.REQUEST_CODE) && (intent != null)) 
+		{
+			IntentResult scanResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, intent);
+
+			if (scanResult != null) 
+			{
+				String format  = scanResult.getFormatName();
+	            String barcode = scanResult.getContents();
+            }
+
+			Toast.makeText(this, "Image capture successfull", Toast.LENGTH_SHORT).show();
+		} 
+		else if (resultCode == RESULT_CANCELED) 
+		{
+			Toast.makeText(this, "Image capture canceled", Toast.LENGTH_SHORT).show();
+>>>>>>> 68b8c95a7805ae715639229a353ade17ae1eb225
 		}
 	}
-
-
-	class J2SEImage implements QRCodeImage {   
-		Bitmap image;   
-	   
-		public J2SEImage(Bitmap image) {   
-			this.image = image;   
-		}   
-	   
-		public int getWidth() {   
-			return image.getWidth();   
-		}   
-		   
-		public int getHeight() {   
-			return image.getHeight();   
-		}   
-	   
-		public int getPixel(int x, int y) {   
-			return image.getPixel(x, y);   
-		}   
-	}   
 }
