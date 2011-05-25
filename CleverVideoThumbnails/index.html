@@ -7,10 +7,15 @@
 </head>
 <body>
 	<h1>Clever Video Thumbnails</h1>
+	<h2>About</h2>
+	<p>
+		May 2011 <em>&lt;nicolas.crovatti@kit-digital.com&gt;</em>
+	</p>
 	<p>
 		The purpose of this article is to help you create a 
 		flexible HTML + CSS code to handle different thumbnail 
-		ratios in your web application.
+		sizes and ratios in your web applications using only 
+		a single image file.
 	</p>
 
 	<h2>Markup</h2>
@@ -54,12 +59,13 @@
 	
 	<p>Not quite bad! However, we might prefer to display our 
 	thumbnails as 16/9 ratio. Let's move on to stylesheets to 
-	discover how we can achieve this.</p>
+	discover how we can achieve this without resizing 
+	the image itself.</p>
 
 	<h2>Styling</h2>
 	<p>
 		This is where the magic happens. Start by setting the 
-		dimensions of the clipping element at the choose ratio, 
+		dimensions of the clipping element at the choosen ratio, 
 		16/9 in this example. Then set the inner <code>img</code>
 		tag width and let it's height adapt by not assigning a 
 		value to it.
@@ -120,20 +126,19 @@
 	<p>
 		To finish the clever video thumbnails we must hide 
 		any overflow and calculate the clipping needed by 
-		you ratio delta. 
+		the implied ratio delta. 
 		<br/>
 		In this example we are displaying 4/3 data in a 
-		16/9 view so the formula is :
+		16/9 view so the simple equation is :
 	</p>
 	<p>
-		<img src="CodeCogsEqn.png" alt="Formula" />
+		<img src="CodeCogsEqn.png" alt="ratio heigh delta equation" />
 	</p>
-	<p>
+	<p>	
 		The formula implementation becomes:
-		(((90 / 160)  x 96) - (90 / 120)  x 96)/2 =
-		<pre>96 / ((16 / 4) * (4/3) * 2) = 9px</pre>
-		Let's apply this clipping aswell as the overflow 
-		hidding to our elements.
+		<pre>((9 / 16) - (3 / 4)) * 96) / 2 = -9px</pre>
+		Let's apply this clipping aswell as hidden overflow 
+		to our elements.
 	</p>
 	<xmp>
 	<style type="text/css" media="screen">
@@ -180,8 +185,62 @@
 		</span>
 	</div>
 
+	<p>
+		And voil&agrave;! 
+	</p>
 
+	<h2>Enhancements</h2>
+	<p>
+		With today's web development tools, we can easily 
+		add an automatic computation of the clipping delta.
+		<br/>
+		SASS mixins is the ideal feature to take care of the
+		industrialization of the various aspect ratios 
+		and/or sizes you may want to support in you layouts:</p>
+	<xmp>
+		@mixin ratio-delta($ratioOut, $ratioIn, $targetWidth) {
+  			top: ((($ratioOut - $ratioIn) * $targetWidth) / 2) 
+  		}
 
+		/* Original thumbnail */
+		.thumbnail-clip-96 img {
+			$width: 96px;
+			width: 100%;
+			position: absolute;
+			left: 0;
+			display: block;
+			@include ratio-delta((9/16), (3/4), $width); 
+		}	
+
+		/* Larger thumbnail */
+		.thumbnail-clip-300 img {
+			$width: 300px;
+			width: 100%;
+			position: absolute;
+			left: 0;
+			display: block;
+			@include ratio-delta((9/16), (3/4), $width); 
+		}	
+
+		/* And for 16/10 ratio */
+		.thumbnail-clip-300 img {
+			$width: 86.4px;
+			width: 100%;
+			position: absolute;
+			left: 0;
+			display: block;
+			@include ratio-delta((10/16), (3/4), $width); 
+		}	
+	</xmp>
+
+	<p>
+	If you have a consistent aspect ratio for 
+	all your generated thumbnail images you might 
+	want to save some code and drop the irrelevant
+	second argument <code>$ratioIn</code>.
+	</p>
+
+	<p><a href="http://sass-lang.com/">More on SASS</a></p>
 
 </body>
 </html>
