@@ -170,7 +170,8 @@ public final class IntentIntegrator {
                                          CharSequence stringButtonNo,
                                          CharSequence stringDesiredBarcodeFormats) {
     Intent intentScan = new Intent(PACKAGE + ".SCAN");
-    intentScan.setPackage(PACKAGE);
+    /* setPackage call prevents compilation */
+   	//intentScan.setPackage(PACKAGE);
     intentScan.addCategory(Intent.CATEGORY_DEFAULT);
 
     // check which types of codes to scan for
@@ -277,7 +278,8 @@ public final class IntentIntegrator {
 
     Intent intent = new Intent();
     intent.setAction(PACKAGE + ".ENCODE");
-    intent.setPackage(PACKAGE);
+    /* setPackage call prevents compilation */
+	//intent.setPackage(PACKAGE);
     intent.putExtra("ENCODE_TYPE", "TEXT_TYPE");
     intent.putExtra("ENCODE_DATA", text);
     try {

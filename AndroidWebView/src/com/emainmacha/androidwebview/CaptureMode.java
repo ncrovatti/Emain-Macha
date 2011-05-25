@@ -28,8 +28,6 @@ public class CaptureMode extends Activity
 	@Override 
 	protected void onActivityResult(int requestCode, int resultCode, Intent intent) 
 	{
-		Toast.makeText(this, "Result: " + IntentIntegrator.REQUEST_CODE, Toast.LENGTH_SHORT).show();
-
 		if ((requestCode == IntentIntegrator.REQUEST_CODE) && (intent != null)) 
 		{
 			IntentResult scanResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, intent);
