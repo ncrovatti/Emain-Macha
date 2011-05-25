@@ -45,14 +45,12 @@ public class CaptureMode extends Activity
 		if ((requestCode == PICTURE_CAPTURED) && (resultCode == Activity.RESULT_OK)) {
 			// Check if the result includes a thumbnail Bitmap
 			if (data == null) {
-				Toast.makeText(this, "Image Captured, Data is null", Toast.LENGTH_SHORT).show();
-				
 				Toast.makeText(this, outputFileUri.toString(), Toast.LENGTH_SHORT).show();
 				QRCodeDecoder decoder = new QRCodeDecoder();   
 				Bitmap image = null;
 
 				image = BitmapFactory.decodeFile(outputFileUri.toString());   
-
+				
 				String decodedData = new String(decoder.decode(new J2SEImage(image)));  
 			} 
 			else {
