@@ -45,32 +45,32 @@
 		The first thing to do is to create a new DOM element 
 		container to hold the thumbnail code:
 	</p>
-	<xmp>
+	<pre><xmp>
 	<div class="thumbnail-container"></div>
-	</xmp>
+	</xmp></pre>
 
 	<p>
 		Now we can add the element that will act as the image 
 		cropper:
 	</p>
 
-	<xmp>
+	<pre><xmp>
 	<div class="thumbnail-container">
 		<span class="thumbnail-clip"></span>
 	</div>
-	</xmp>
+	</xmp></pre>
 
 	<p>
 		Let's finish the markup stage by adding the actual 
 		thumbnail image in 4/3 ratio format.
 	</p>
-	<xmp>
+	<pre><xmp>
 	<div class="thumbnail-container">
 		<span class="thumbnail-clip">
 			<img src="43.png" alt="my Video Thumbnail" />
 		</span>
 	</div>
-	</xmp>
+	</xmp></pre>
 
 	<h3>Preview:</h3>
 	<div class="thumbnail-container">
@@ -92,7 +92,7 @@
 		tag width and let it's height adapt by not assigning a 
 		value to it.
 	</p>
-	<xmp>
+	<pre><xmp>
 	<style type="text/css" media="screen">
 		.thumbnail-clip {
 			width: 96px;
@@ -108,7 +108,7 @@
 			display: block;
 		}	
 	</style>
-	</xmp>
+	</xmp></pre>
 
 	<h3>Preview:</h3>
 	<div class="thumbnail-container">
@@ -162,7 +162,7 @@
 		Let's apply this clipping aswell as hidden overflow 
 		to our elements.
 	</p>
-	<xmp>
+	<pre><xmp>
 	<style type="text/css" media="screen">
 		.thumbnail-clip {
 			width: 96px;
@@ -180,7 +180,7 @@
 			top: -9px;
 		}	
 	</style>
-	</xmp>
+	</xmp></pre>
 
 	<h3>Preview:</h3>
 	<div class="thumbnail-container">
@@ -219,7 +219,7 @@
 		SASS mixins is the ideal feature to take care of the
 		industrialization of the various aspect ratios 
 		and/or sizes you may want to support in you layouts:</p>
-	<xmp>
+	<pre><xmp>
 		@mixin ratio-delta($ratioOut, $ratioIn, $targetWidth) {
   			top: ((($ratioOut - $ratioIn) * $targetWidth) / 2) 
   		}
@@ -253,7 +253,7 @@
 			display: block;
 			@include ratio-delta((10/16), (3/4), $width); 
 		}	
-	</xmp>
+	</xmp></pre>
 
 	<p>
 	If you have a consistent aspect ratio for 
