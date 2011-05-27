@@ -25,24 +25,6 @@ public class CaptureMode extends Activity
 		IntentIntegrator.initiateScan(this); 
     }
 
-<<<<<<< HEAD
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if ((requestCode == PICTURE_CAPTURED) && (resultCode == Activity.RESULT_OK)) {
-			// Check if the result includes a thumbnail Bitmap
-			if (data == null) {
-				Toast.makeText(this, outputFileUri.toString(), Toast.LENGTH_SHORT).show();
-				QRCodeDecoder decoder = new QRCodeDecoder();   
-				Bitmap image = null;
-
-				image = BitmapFactory.decodeFile(outputFileUri.toString());   
-				
-				String decodedData = new String(decoder.decode(new J2SEImage(image)));  
-			} 
-			else {
-				Toast.makeText(this, "Image Captured, Data is not null", Toast.LENGTH_SHORT).show();
-			}
-=======
 	@Override 
 	protected void onActivityResult(int requestCode, int resultCode, Intent intent) 
 	{
@@ -61,7 +43,6 @@ public class CaptureMode extends Activity
 		else if (resultCode == RESULT_CANCELED) 
 		{
 			Toast.makeText(this, "Image capture canceled", Toast.LENGTH_SHORT).show();
->>>>>>> 68b8c95a7805ae715639229a353ade17ae1eb225
 		}
 	}
 }
