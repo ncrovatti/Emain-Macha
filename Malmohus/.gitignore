@@ -1,0 +1,4 @@
+bin/*
+*.apk
+*.ap_
+*.orig
