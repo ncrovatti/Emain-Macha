@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
     <color name="background">#9db25e</color>
+    <color name="text_title">#5f751d</color>
+    <color name="shadow_title">#fff</color>
 </resources>

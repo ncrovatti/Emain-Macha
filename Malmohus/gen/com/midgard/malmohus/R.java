@@ -12,6 +12,8 @@ public final class R {
     }
     public static final class color {
         public static final int background=0x7f030000;
+        public static final int shadow_title=0x7f030002;
+        public static final int text_title=0x7f030001;
     }
     public static final class id {
         public static final int about_button=0x7f050004;

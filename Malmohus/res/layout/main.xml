@@ -7,13 +7,19 @@ android:layout_height="fill_parent"
 android:orientation="vertical"
 >
 <TextView
-android:id="@+id/widget34"
-android:layout_width="wrap_content"
-android:layout_height="wrap_content"
-android:layout_marginBottom="16dip"
-android:text="@string/main_title"
-android:textSize="16dip"
-android:gravity="center"
+  android:id="@+id/widget34"
+  android:textColor="@color/text_title"
+  android:shadowColor="@color/shadow_title"
+  android:textStyle="bold"
+  android:shadowDx="0.0"
+  android:shadowDy="0.5"
+  android:shadowRadius="0.5"
+  android:layout_width="fill_parent"
+  android:layout_height="wrap_content"
+  android:layout_marginBottom="16dip"
+  android:text="@string/main_title"
+  android:textSize="20dip"
+  android:gravity="center_horizontal"
 >
 </TextView>
 <Button
@@ -21,7 +27,7 @@ android:id="@+id/continue_button"
 android:layout_width="fill_parent"
 android:layout_height="wrap_content"
 android:text="@string/continue_label"
-android:textSize="10dp"
+android:textSize="14dip"
 >
 </Button>
 <Button
@@ -29,7 +35,7 @@ android:id="@+id/new_game_button"
 android:layout_width="fill_parent"
 android:layout_height="wrap_content"
 android:text="@string/new_game_label"
-android:textSize="10dp"
+android:textSize="14dip"
 >
 </Button>
 <Button
@@ -37,7 +43,7 @@ android:id="@+id/about_button"
 android:layout_width="fill_parent"
 android:layout_height="wrap_content"
 android:text="@string/about_label"
-android:textSize="10dp"
+android:textSize="14dip"
 >
 </Button>
 <Button
@@ -45,7 +51,7 @@ android:id="@+id/exit_button"
 android:layout_width="fill_parent"
 android:layout_height="wrap_content"
 android:text="@string/exit_label"
-android:textSize="10dp"
+android:textSize="14dip"
 >
 </Button>
 </LinearLayout>
