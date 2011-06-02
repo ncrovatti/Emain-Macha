@@ -5,14 +5,22 @@
     <!-- Labels -->
     <string name="continue_label">Continue</string>
     <string name="new_game_label">New Game</string>
-    <string name="about_label">About</string>
     <string name="exit_label">Exit</string>
 
     <string name="about_title">About Malmohus</string>
+    <string name="about_label">About</string>
     <string name="about_text">
     	Malmohus, a game about trolls and love
     </string>
+
     <string name="grid_title">Malmohus Level</string>
-    <string name="settings_label">Settings ...</string>
+
+
+    <string name="settings_title">Settings</string>
+    <string name="settings_label">Settings</string>
     <string name="settings_shortcut">s</string>
+
+    <string name="color_coding_title">Gray</string>
+    <string name="color_coding_summary">color coding summary</string>
+
 </resources>
