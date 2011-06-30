@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 
 import pysvn
-import string
 import time
 import urllib
 import re
 import hashlib
-import operator
 from optparse import OptionParser
-from datetime import datetime
 
 class Repository:
 	def __init__(self):
@@ -41,8 +38,8 @@ class Repository:
 		parser.add_option("-e" , "--end"     , type="string"       , default=""                 , dest="lastShipping"  , help="Shipping end date"      , metavar="END_DATE")
 		parser.add_option("-u" , "--user"    , type="string"       , default="nicolas.crovatti" , dest="developerName" , help="Developer name"         , metavar="DEVELOPER")
 		parser.add_option("-d" , "--subtree" , type="string"       , default="kewego"           , dest="customDir"     , help="Custom directory"       , metavar="CUSTOM_DIR")
+		parser.add_option("-t" , "--type"    , action="append"     , type="string"              , default=[]           , dest="revisionType"           , help="Restrict revision type" , metavar="TYPE")
 		parser.add_option("-p" , "--paths"   , action="store_true" , default=False              , dest="showPaths"     , help="Display modifed paths"  , metavar="SHOW_PATHS")
-		parser.add_option("-t" , "--type"    , type="string"       , default=""                 , dest="revisionType"  , help="Restrict revision type" , metavar="TYPE")
 		(options, args) = parser.parse_args()
 		return options
 
@@ -168,11 +165,9 @@ class Repository:
 		groupedLogs = self.sortLogs(logs)
 
 		for group in groupedLogs:
-				
-			if self.options.revisionType is '' or  self.options.revisionType == group:
-				
+			if len(self.options.revisionType) == 0 or group in self.options.revisionType:
 				if len(groupedLogs[group]) == 0:
-					if self.options.revisionType == group:
+					if group in self.options.revisionType:
 						print "No Match found for " + group
 					continue
 
@@ -193,9 +188,7 @@ class Repository:
 						print ''
 				
 		if len(groupedLogs) > 0:
-			print ''
-			print 'Legend:'
-			print '  ' + self.colors['stashed'] + 'Stashed ' + self.colors['shipped'] + 'Shipped ' + self.colors['ready'] + 'Ready' + self.colors['reset']
+			print '\nLegend:\n    ' + self.colors['stashed'] + 'Stashed ' + self.colors['ready'] + 'Ready ' + self.colors['shipped'] + 'Shipped' + self.colors['reset']
 
 if __name__ == "__main__":
 	repo = Repository()
