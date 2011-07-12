@@ -5,10 +5,14 @@ import time
 import urllib
 import re
 import hashlib
+from PyQt4 import QtGui
 from optparse import OptionParser
+from pendingCommitsForm import *
+import sys
 
 class Repository:
-	def __init__(self):
+	def __init__(self, window):
+		self.ui                        = window.ui
 		self.options                   = self.parseArgs()
 		self.limit                     = 0
 		self.noRevision                = pysvn.Revision(pysvn.opt_revision_kind.unspecified)
@@ -16,6 +20,8 @@ class Repository:
 		self.user                      = "nicolas.crovatti"
 		self.password                  = "Wx8V41p7"
 		self.rootDir                   = u"/home/nico/workspace/pulse3/%s" % self.options.customDir
+		self.remoteDir                 = "https://svn.cardinet.kewego.int/svn/pulse3/"
+		self.wikiBaseUrl               = "http://wiki.kewego.int/wakka.php?wiki="
 		self.client                    = pysvn.Client()
 		self.client.commit_info_style  = 1
 		self.client.callback_notify    = self.notify
@@ -30,7 +36,19 @@ class Repository:
 			'stashed' : '\033[38;5;196m',
 		}
 
+		self.upToDate()
 		print self.colors['reset']
+
+
+	def upToDate(self):
+		entry_list = self.client.info(self.rootDir)
+		localRev = entry_list.revision.number;
+
+		entry_list = self.client.info2(self.remoteDir, self.headRevision, self.noRevision, False)
+		remoteRev = entry_list[0][1].last_changed_rev.number;
+
+		if remoteRev > localRev: 
+			print "%sWarning: you repository is behind by %s revisions" % (self.colors['ready'], remoteRev - localRev)
 
 	def parseArgs(self):
 		parser = OptionParser()
@@ -47,12 +65,12 @@ class Repository:
 		print event_dict
 		return
 
-	def credentials(realm, username, may_save):
+	def credentials(self, realm, username, may_save):
 		return True, self.user, self.password, True
 
 	def getReadyToShipItemList(self):
 		try:
-			f = urllib.urlopen("http://wiki.kewego.int/wakka.php?wiki=WebShipping")
+			f = urllib.urlopen(self.wikiBaseUrl + "WebShipping")
 		except Exception, e:
 			print "[SocketWarning] Could not fetch ready to ship revisions. All revisions will be considered as unshipped."
 			return []
@@ -63,7 +81,7 @@ class Repository:
 
 	def getShippedItemList(self):
 		try:
-			f = urllib.urlopen("http://wiki.kewego.int/wakka.php?wiki=WebShippingChangeLog")
+			f = urllib.urlopen(self.wikiBaseUrl + "WebShippingChangeLog")
 		except Exception, e:
 			print "[SocketWarning] Could not fetch latest revisions. All revisions will be considered as unshipped."
 			return []
@@ -186,11 +204,31 @@ class Repository:
 						for path in groupedLogs[group][logId]['paths']:
 							print "   [%s] %s" % (path.action, path.path)
 						print ''
-				
+					self.ui.commitsList.addTopLevelItem(QtGui.QTreeWidgetItem([groupedLogs[group][logId]['message'], revisions, groupedLogs[group][logId]['author']]))
+
 		if len(groupedLogs) > 0:
 			print '\nLegend:\n    ' + self.colors['stashed'] + 'Stashed ' + self.colors['ready'] + 'Ready ' + self.colors['shipped'] + 'Shipped' + self.colors['reset']
 
+
+
+# Create a class for our main window
+class Main(QtGui.QMainWindow):
+	def __init__(self):
+		QtGui.QMainWindow.__init__(self)
+		# This is always the same
+		self.ui = Ui_PendingCommits()
+		self.ui.setupUi(self)
+
+
 if __name__ == "__main__":
-	repo = Repository()
+	app = QtGui.QApplication(sys.argv)
+	window=Main()
+	window.show()
+
+	repo = Repository(window)
 	repo.getLogs();
+
+
+	sys.exit(app.exec_())
+	
 
