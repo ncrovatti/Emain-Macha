@@ -1,0 +1,58 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+LogLine	kitd/versionControlSystem/subversion.py	/^class LogLine():$/;"	c	inherits:
+OptionParser	main.py	/^from optparse import OptionParser$/;"	i
+OptionParser	pendingCommits	/^from optparse import OptionParser$/;"	i
+Path	kitd/versionControlSystem/subversion.py	/^class Path:$/;"	c	inherits:
+QtCore	gui/pendingCommitsMain.py	/^from PyQt4 import QtCore, QtGui$/;"	i
+QtGui	gui/pendingCommitsMain.py	/^from PyQt4 import QtCore, QtGui$/;"	i
+QtGui	pendingCommits	/^from PyQt4 import QtGui$/;"	i
+QtGui	views/qtView.py	/^from PyQt4 import QtGui$/;"	i
+Repository	pendingCommits	/^class Repository:$/;"	c	inherits:
+TermView	views/termView.py	/^class TermView:$/;"	c	inherits:
+Ui_PendingCommits	gui/pendingCommitsMain.py	/^class Ui_PendingCommits(object):$/;"	c	inherits:object
+Ui_PendingCommits	views/qtView.py	/^from gui.pendingCommitsMain import Ui_PendingCommits$/;"	i
+__init__	kitd/versionControlSystem/subversion.py	/^	def __init__(self, action, path):$/;"	m	class:Path	access:public
+__init__	kitd/versionControlSystem/subversion.py	/^	def __init__(self, message, revisions, author, paths):$/;"	m	class:LogLine	access:public
+__init__	pendingCommits	/^	def __init__(self):$/;"	m	class:Repository	access:public
+__init__	views/qtView.py	/^	def __init__(self, options):$/;"	m	class:qtView	access:public
+__init__	views/termView.py	/^	def __init__(self, options):$/;"	m	class:TermView	access:public
+addLogLine	views/qtView.py	/^	def addLogLine(self, message, revisions, author, paths):$/;"	m	class:qtView	access:public
+addLogLine	views/termView.py	/^	def addLogLine(self, message, revisions, author, paths):$/;"	m	class:TermView	access:public
+buildRevisionList	views/qtView.py	/^	def buildRevisionList(self, revisionList, color):$/;"	m	class:qtView	access:public
+buildRevisionList	views/termView.py	/^	def buildRevisionList(self, revisionList, color):$/;"	m	class:TermView	access:public
+client	main.py	/^	client  = vcsClient()$/;"	v
+credentials	pendingCommits	/^	def credentials(self, realm, username, may_save):$/;"	m	class:Repository	access:public
+getLogs	main.py	/^def getLogs():$/;"	f	access:public
+getLogs	pendingCommits	/^	def getLogs(self):$/;"	m	class:Repository	access:public
+getReadyToShipItemList	pendingCommits	/^	def getReadyToShipItemList(self):$/;"	m	class:Repository	access:public
+getRevisionFromDate	pendingCommits	/^	def getRevisionFromDate(self, date, format='%Y-%m-%d'):$/;"	m	class:Repository	access:public
+getShippedItemList	pendingCommits	/^	def getShippedItemList(self):$/;"	m	class:Repository	access:public
+hashlib	pendingCommits	/^import hashlib$/;"	i
+kewego	main.py	/^import kewego.vcsClient$/;"	i
+notify	pendingCommits	/^	def notify(event_dict):$/;"	m	class:Repository	access:public
+options	main.py	/^	options = parseOptions()$/;"	v
+os	main.py	/^import os$/;"	i
+parseArgs	pendingCommits	/^	def parseArgs(self):$/;"	m	class:Repository	access:public
+parseOptions	main.py	/^def parseOptions():$/;"	f	access:public
+pysvn	main.py	/^import pysvn$/;"	i
+pysvn	pendingCommits	/^import pysvn$/;"	i
+qtView	views/qtView.py	/^class qtView(QtGui.QMainWindow):$/;"	c	inherits:QtGui.QMainWindow
+re	pendingCommits	/^import re$/;"	i
+repo	pendingCommits	/^	repo = Repository()$/;"	v	class:Repository
+resizeEvent	views/qtView.py	/^	def resizeEvent(self, event):$/;"	m	class:qtView	access:public
+retranslateUi	gui/pendingCommitsMain.py	/^    def retranslateUi(self, PendingCommits):$/;"	m	class:Ui_PendingCommits	access:public
+setupUi	gui/pendingCommitsMain.py	/^    def setupUi(self, PendingCommits):$/;"	m	class:Ui_PendingCommits	access:public
+sortLogs	pendingCommits	/^	def sortLogs(self, logs):$/;"	m	class:Repository	access:public
+sys	main.py	/^import sys$/;"	i
+sys	pendingCommits	/^import sys$/;"	i
+time	main.py	/^import time$/;"	i
+time	pendingCommits	/^import time$/;"	i
+upToDate	pendingCommits	/^	def upToDate(self):$/;"	m	class:Repository	access:public
+urllib	pendingCommits	/^import urllib$/;"	i
+vcsClient	main.py	/^import kewego.vcsClient$/;"	i
+workDir	main.py	/^	workDir = u"\/home\/nico\/workspace\/pulse3\/%s" % options.customDir$/;"	v
