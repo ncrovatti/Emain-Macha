@@ -9,6 +9,7 @@ from PyQt4 import QtGui
 from optparse import OptionParser
 from kitd.versionControlSystem import LogLine, Path
 from views.termView import TermView
+from views.htmlView import HtmlView
 from views.qtView import QtView
 import sys
 
@@ -17,19 +18,24 @@ class Repository:
 	def __init__(self):
 		self.options = self.parseArgs()
 
-		if self.options.guiEnabled is True:
+		if self.options.guiView == 'GUI':
 			self.app = QtGui.QApplication(sys.argv)
 			self.ui = QtView(self.options)
 			self.ui.show()
-		else:
+		elif self.options.guiView == 'HTML':
+			self.ui = HtmlView(self.options)
+		else: # default is 'TERM'
 			self.ui = TermView(self.options)
+
+				
 		
 		self.limit                     = 0
 		self.noRevision                = pysvn.Revision(pysvn.opt_revision_kind.unspecified)
 		self.headRevision              = pysvn.Revision(pysvn.opt_revision_kind.head)
 		self.user                      = "nicolas.crovatti"
 		self.password                  = "Wx8V41p7"
-		self.rootDir                   = u"/home/nico/workspace/pulse3/%s" % self.options.customDir
+		self.localRepository           = "/home/nico/workspace/pulse3/"
+		self.rootDir                   = u"%s%s" % (self.localRepository, self.options.customDir)
 		self.remoteDir                 = "https://svn.cardinet.kewego.int/svn/pulse3/"
 		self.wikiBaseUrl               = "http://wiki.kewego.int/wakka.php?wiki="
 		self.client                    = pysvn.Client()
@@ -38,16 +44,10 @@ class Repository:
 		self.client.callback_get_login = self.credentials
 		self.shippedRevisions          = self.getShippedItemList()
 		self.readyRevisions            = self.getReadyToShipItemList()
-
-		self.colors = {
-			'reset'   : '\033[0m',
-			'shipped' : '\033[38;1;46m',
-			'ready'   : '\033[38;5;208m',
-			'stashed' : '\033[38;5;196m',
-		}
+		self.colors                    = self.ui.colors
+		self.ui.rootDir                = self.localRepository
 
 		self.upToDate()
-		print self.colors['reset']
 
 
 	def upToDate(self):
@@ -58,7 +58,8 @@ class Repository:
 		remoteRev = entry_list[0][1].last_changed_rev.number;
 
 		if remoteRev > localRev: 
-			print "%sWarning: you repository is behind by %s revisions" % (self.colors['ready'], remoteRev - localRev)
+			print "%sWarning: your repository is behind by %s revisions %s" % (self.colors['ready'], remoteRev - localRev, self.ui.newLine)
+			print self.colors['reset']
 
 	def parseArgs(self):
 		parser = OptionParser()
@@ -66,8 +67,8 @@ class Repository:
 		parser.add_option("-e" , "--end"     , type="string"       , default=""                 , dest="lastShipping"  , help="Shipping end date"      , metavar="END_DATE")
 		parser.add_option("-u" , "--user"    , type="string"       , default="nicolas.crovatti" , dest="developerName" , help="Developer name"         , metavar="DEVELOPER")
 		parser.add_option("-d" , "--subtree" , type="string"       , default="kewego"           , dest="customDir"     , help="Custom directory"       , metavar="CUSTOM_DIR")
+		parser.add_option("-g" , "--gui"     , type="string"       , default="TERM"             , dest="guiView"       , help="Type of View"           , metavar="TERM | GUI | HTML")
 		parser.add_option("-t" , "--type"    , action="append"     , type="string"              , default=[]           , dest="revisionType"           , help="Restrict revision type" , metavar="TYPE")
-		parser.add_option("-g" , "--gui"     , action="store_true" , default=False              , dest="guiEnabled"     , help="Enable GUI interface"   , metavar="")
 		parser.add_option("-p" , "--paths"   , action="store_true" , default=False              , dest="showPaths"     , help="Display modifed paths"  , metavar="")
 		(options, args) = parser.parse_args()
 		return options
@@ -128,6 +129,11 @@ class Repository:
 					}
 
 				groupedLogs[groupId]['revisions']['all'].append(log.revision.number)
+				
+				for path in log.changed_paths:
+					if path.action == 'M':
+						print self.client.diff(path.path)
+						
 
 				if u"r%s" % log.revision.number in self.shippedRevisions:
 					groupedLogs[groupId]['revisions']['shipped'].append(log.revision.number)
@@ -174,9 +180,8 @@ class Repository:
 			except Exception, e:
 				print '[ArgumentError] Invalid argument. lastShipping is required'
 				return -1
-		
 		groupedLogs = self.sortLogs(logs)
-
+		
 		for group in groupedLogs:
 			if len(self.options.revisionType) == 0 or group in self.options.revisionType:
 				if len(groupedLogs[group]) == 0:
@@ -184,9 +189,8 @@ class Repository:
 						print "No Match found for " + group
 					continue
 
-				print "\n" + group + ":" 
+				print "\n" + group + ":" + self.ui.newLine 
 				for logId in groupedLogs[group]:
-					
 					stashedRevisions = self.ui.buildRevisionList(groupedLogs[group][logId]['revisions']['stashed'], self.colors['stashed'])
 					shippedRevisions = self.ui.buildRevisionList(groupedLogs[group][logId]['revisions']['shipped'], self.colors['shipped'])
 					readyRevisions   = self.ui.buildRevisionList(groupedLogs[group][logId]['revisions']['ready'], self.colors['ready'])
@@ -195,7 +199,7 @@ class Repository:
 					self.ui.addLogLine(groupedLogs[group][logId]['message'], revisions, groupedLogs[group][logId]['author'], groupedLogs[group][logId]['paths'])
 
 		if len(groupedLogs) > 0:
-			print '\nLegend:\n    ' + self.colors['stashed'] + 'Stashed ' + self.colors['ready'] + 'Ready ' + self.colors['shipped'] + 'Shipped' + self.colors['reset']
+			print '\nLegend:\n    ' + self.colors['stashed'] + 'Stashed ' +  self.colors['reset'] + self.colors['ready'] + 'Ready ' +  self.colors['reset'] + self.colors['shipped'] + 'Shipped' + self.colors['reset']
 
 
 
@@ -204,6 +208,6 @@ if __name__ == "__main__":
 	repo = Repository()
 	repo.getLogs();
 
-	if repo.options.guiEnabled is True: 
+	if repo.options.guiView == 'GUI': 
 		sys.exit(repo.app.exec_())
 

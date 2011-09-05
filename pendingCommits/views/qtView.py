@@ -7,6 +7,16 @@ class QtView(QtGui.QMainWindow):
 		self.options = options
 		self.ui = Ui_PendingCommits()
 		self.ui.setupUi(self)
+		self.newLine = ''
+		self.rootDir = False
+		self.colors = {
+			'reset'   : '',
+			'shipped' : '',
+			'ready'   : '',
+			'stashed' : '',
+		}
+
+	
 
 	def resizeEvent(self, event):
 		window = event.size()
