@@ -12,6 +12,8 @@ from views.termView import TermView
 from views.htmlView import HtmlView
 from views.qtView import QtView
 import sys
+import os
+import subprocess
 
 
 class Repository:
@@ -27,7 +29,6 @@ class Repository:
 		else: # default is 'TERM'
 			self.ui = TermView(self.options)
 
-				
 		
 		self.limit                     = 0
 		self.noRevision                = pysvn.Revision(pysvn.opt_revision_kind.unspecified)
@@ -57,7 +58,7 @@ class Repository:
 		entry_list = self.client.info2(self.remoteDir, self.headRevision, self.noRevision, False)
 		remoteRev = entry_list[0][1].last_changed_rev.number;
 
-		if remoteRev > localRev: 
+		if remoteRev > localRev and self.options.guiView != 'HTML': 
 			print "%sWarning: your repository is behind by %s revisions %s" % (self.colors['ready'], remoteRev - localRev, self.ui.newLine)
 			print self.colors['reset']
 
@@ -70,6 +71,7 @@ class Repository:
 		parser.add_option("-g" , "--gui"     , type="string"       , default="TERM"             , dest="guiView"       , help="Type of View"           , metavar="TERM | GUI | HTML")
 		parser.add_option("-t" , "--type"    , action="append"     , type="string"              , default=[]           , dest="revisionType"           , help="Restrict revision type" , metavar="TYPE")
 		parser.add_option("-p" , "--paths"   , action="store_true" , default=False              , dest="showPaths"     , help="Display modifed paths"  , metavar="")
+		parser.add_option("-D" , "--diffs"   , action="store_true" , default=False              , dest="showDiffs"     , help="Display Diffs"  , metavar="")
 		(options, args) = parser.parse_args()
 		return options
 
@@ -106,6 +108,16 @@ class Repository:
 			formatedTime = time.strptime(date, format);
 			return pysvn.Revision(pysvn.opt_revision_kind.date, time.mktime(formatedTime))
 
+	def getDiffs(self, paths, revision):
+		if self.options.showDiffs == False:
+			return paths
+
+		for path in paths:
+			if path.action == 'M':
+				literalPath = self.remoteDir + path.path;
+				path.diff = self.client.diff("/tmp", literalPath, pysvn.Revision( pysvn.opt_revision_kind.number, revision - 1), literalPath, pysvn.Revision( pysvn.opt_revision_kind.number, revision))
+		return paths 
+
 	def sortLogs(self, logs):
 		groupedLogs = {}
 
@@ -125,15 +137,10 @@ class Repository:
 						'author'    : log.author,
 						'date'      : time.ctime(log.date),
 						'message'   : message,
-						'paths'     : log.changed_paths
+						'paths'     : self.getDiffs(log.changed_paths, log.revision.number)
 					}
-
-				groupedLogs[groupId]['revisions']['all'].append(log.revision.number)
 				
-				for path in log.changed_paths:
-					if path.action == 'M':
-						print self.client.diff(path.path)
-						
+				groupedLogs[groupId]['revisions']['all'].append(log.revision.number)
 
 				if u"r%s" % log.revision.number in self.shippedRevisions:
 					groupedLogs[groupId]['revisions']['shipped'].append(log.revision.number)
@@ -199,7 +206,7 @@ class Repository:
 					self.ui.addLogLine(groupedLogs[group][logId]['message'], revisions, groupedLogs[group][logId]['author'], groupedLogs[group][logId]['paths'])
 
 		if len(groupedLogs) > 0:
-			print '\nLegend:\n    ' + self.colors['stashed'] + 'Stashed ' +  self.colors['reset'] + self.colors['ready'] + 'Ready ' +  self.colors['reset'] + self.colors['shipped'] + 'Shipped' + self.colors['reset']
+			self.ui.displayLegend()
 
 
 

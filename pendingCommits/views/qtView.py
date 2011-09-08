@@ -17,6 +17,9 @@ class QtView(QtGui.QMainWindow):
 		}
 
 	
+	def displayLegend(self):
+		pass
+
 
 	def resizeEvent(self, event):
 		window = event.size()

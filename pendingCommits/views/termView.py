@@ -10,6 +10,9 @@ class TermView:
 			'stashed' : '\033[38;5;196m',
 		}
 
+	def displayLegend(self):
+		print '\nLegend:\n    ' + self.colors['stashed'] + 'Stashed ' +  self.colors['reset'] + self.colors['ready'] + 'Ready ' +  self.colors['reset'] + self.colors['shipped'] + 'Shipped' + self.colors['reset']
+
 	def addLogLine(self, message, revisions, author, paths):
 		print '- ' + message + ' ' + revisions,
 		print '(%s)' % author
@@ -17,6 +20,8 @@ class TermView:
 		if self.options.showPaths is True:
 			for path in paths: 
 				print "   [%s] %s" % (path.action, path.path)
+				if path.action == 'M':
+					print path.diff
 			print ""
 
 	def buildRevisionList(self, revisionList, color):
