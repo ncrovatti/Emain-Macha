@@ -1,7 +1,48 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-user=$1
-pages=$2
+usage() {
+cat << EOF
+usage: $0 username [options]
+
+This script parse and save svn logs into a couchDB instance.
+
+OPTIONS:
+   -h      Show this message
+   -f      format [csv, ...]
+   -p      Number of pages to fetch
+   -u      ebay username 
+EOF
+}
+
+if [ -z $1 ]; then 
+	usage;
+	exit;
+fi
+
+until [ -z "$1" ]; do
+  case $1 in
+    "-u")
+      shift
+      if [ "${1:1:0}" != "-" ]; then
+				user=$1;shift
+      fi;;
+    "-p")
+      shift
+      if [ "${1:1:0}" != "-" ]; then
+				pages=$1;shift
+      fi;;
+    "-f")
+      shift
+      if [ "${1:1:0}" != "-" ]; then
+				format=$1;shift
+      fi;;
+    "-h")
+		usage; exit;;
+	*) shift;;
+  esac
+done
+
+
 
 if [ -z $pages ]; then 
 	pages=1
@@ -9,12 +50,46 @@ fi
 
 echo "" > /tmp/$user.sold
 
+oldSum=""
+
 for page in `seq 1 $pages`; 
 do 
-	wget -q -O '-' "http://feedback.ebay.fr/ws/eBayISAPI.dll?ViewFeedback2&ftab=AllFeedback&userid=$user&items=200&page=$page" |\
-	grep -o '#[0-9]\{7,\}' >> /tmp/$user.sold; 
-	echo "Fetching $user page #$page/$pages ..."
+		echo "Fetching $user page #$page/$pages ..."
+		currentPage="/tmp/${user}.${page}.page" 
+		wget -q -O ${currentPage} "http://feedback.ebay.fr/ws/eBayISAPI.dll?ViewFeedback2&ftab=FeedbackAsSeller&userid=$user&items=200&page=$page"
+		echo "Fetching: http://feedback.ebay.fr/ws/eBayISAPI.dll?ViewFeedback2&ftab=FeedbackAsSeller&userid=$user&items=200&page=$page"
+		items=$(cat ${currentPage} | grep -o '#[0-9]\{7,\}')
+		sum=$(echo ${items} | md5sum)
+		if [ "${sum}" != "${oldSum}" ]; then
+			oldSum=${sum}
+			echo "${items}" >> /tmp/$user.sold;
+		else
+			echo "WWW: Reached end of feedback prematurely"
+			break
+		fi
 done;
 
-echo 'Computing top 10'
-cat /tmp/$user.sold | sort | uniq -c | sort -k2nr | awk '{printf("%5s http://cgi.ebay.fr/ws/eBayISAPI.dll?ViewItem&item=%s \n",$1,$2)}END{print}' | sort -n | tr -d '#' | tail -n 10
+echo 'Computing top 10 sales'
+cat /tmp/$user.sold | sort | uniq -c | sort -k2nr |  awk '{printf("%5s http://cgi.ebay.fr/ws/eBayISAPI.dll?ViewItem&item=%s \n",$1,$2)}END{print}' | sort -rn | tr -d '#' | head -n 10
+
+
+echo 'Computing top 30 turnover'
+echo $(
+	for i in $(cat /tmp/$user.sold | sort | uniq -c | awk '{print $1" "$2}' | sort -rn | awk '{print $2}' | tr -d '#'); do
+		(
+			item=$(wget -qO '-' "http://cgi.ebay.fr/ws/eBayISAPI.dll?ViewItem&item=${i}")
+			price=$(echo ${item} | sed -e 's/>/>\n/g' | grep -A 1 'vi-is1-prcp' | /bin/grep -Eo '[0-9]+,[0-9]*' | tr ',' '.' )
+			title=$(echo ${item} | awk -vRS="</title>" '/<title>/{gsub(/.*<title>|\n+/,"");print;exit}') 
+			occurences=$(cat /tmp/$user.sold | sort | uniq -c | grep ${i} | awk '{print $1}')
+
+			if [ ! -z "${price}" ]; then
+				ca=$(echo "${occurences} * ${price}" | bc)
+				if [ "${format}" == "csv" ]; then
+					echo "${ca}|${occurences}|${price}|${title}|http://cgi.ebay.fr/ws/eBayISAPI.dll?ViewItem&item=${i}@@@"
+				else
+					echo "${ca} EUR in ${occurences} sales at ${price} EUR each (${title}) (http://cgi.ebay.fr/ws/eBayISAPI.dll?ViewItem&item=${i}) @@@"
+				fi
+			fi
+		) &
+	done
+) | sed -e 's/@@@/\n/g'  | sort -rn | head -n 30
