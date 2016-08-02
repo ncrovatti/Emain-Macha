@@ -34,7 +34,7 @@ class Repository:
 		self.noRevision                = pysvn.Revision(pysvn.opt_revision_kind.unspecified)
 		self.headRevision              = pysvn.Revision(pysvn.opt_revision_kind.head)
 		self.user                      = "nicolas.crovatti"
-		self.password                  = "Wx8V41p7"
+		self.password                  = ""
 		self.localRepository           = "/home/nico/workspace/pulse3/"
 		self.rootDir                   = u"%s%s" % (self.localRepository, self.options.customDir)
 		self.remoteDir                 = "https://svn.cardinet.kewego.int/svn/pulse3/"
